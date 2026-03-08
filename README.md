@@ -1,8 +1,11 @@
 ﻿# Substack2Markdown
 
-Substack2Markdown is a Python tool for downloading free and premium Substack posts and saving them as both Markdown and 
-HTML files, and includes a simple HTML interface to browse and sort through the posts. It will save paid for content as 
-long as you're subscribed to that substack. 
+Substack2Markdown now contains two desktop clients and a shared Python backend:
+
+- A Python/Tkinter client for quick local usage
+- A native SwiftUI macOS client that acts as a frontend for the Python backend
+
+The backend can download free or premium Substack posts and export them as Markdown, HTML, and PDF. It can also translate already-downloaded Markdown articles with the OpenAI API and generate translated HTML/PDF outputs.
 
 🆕 @Firevvork has built a web version of this tool at [Substack Reader](https://www.substacktools.com/reader) - no 
 installation required! (Works for free Substacks only.)
@@ -10,71 +13,142 @@ installation required! (Works for free Substacks only.)
 
 ![Substack2Markdown Interface](./assets/images/screenshot.png)
 
-Once you run the script, it will create a folder named after the substack in `/substack_md_files`,
-and then begin to scrape the substack URL, converting the blog posts into markdown files. Once all the posts have been
-saved, it will generate an HTML file in `/substack_html_pages` directory that allows you to browse the posts.
-
-You can either hardcode the substack URL and the number of posts you'd like to save into the top of the file, or 
-specify them as command line arguments.
+Once you run the tool, it creates a folder named after the Substack under the chosen output directories and saves the requested article formats. The current app can export only the file types you select.
 
 ## Features
 
 - Converts Substack posts into Markdown files.
-- Generates an HTML file to browse Markdown files.
+- Generates HTML files and an HTML index for browsing.
+- Exports articles to PDF.
+- Supports direct post URLs as well as full Substack home pages.
+- Adds optional OpenAI-powered translation for already-downloaded Markdown articles, including new HTML and PDF outputs.
+- Includes a desktop GUI for running the workflow without terminal commands.
+- Includes a native SwiftUI macOS app with Chinese UI, saved settings, bundled icon, progress display, and log output.
 - Supports free and premium content (with subscription).
-- The HTML interface allows sorting essays by date or likes.
 
 ## Installation
 
 Clone the repo and install the dependencies:
 
 ```bash
-git clone https://github.com/yourusername/substack_scraper.git
-cd substack_scraper
+git clone https://github.com/timf34/Substack2Markdown.git
+cd Substack2Markdown
 
-# # Optinally create a virtual environment
-# python -m venv venv
-# # Activate the virtual environment
-# .\venv\Scripts\activate  # Windows
-# source venv/bin/activate  # Linux
+python3 -m venv .venv
+source .venv/bin/activate
 
 pip install -r requirements.txt
 ```
 
-For the premium scraper, update the `config.py` in the root directory with your Substack email and password:
+For premium scraping, update `config.py` or provide credentials at runtime:
 
 ```python
 EMAIL = "your-email@domain.com"
 PASSWORD = "your-password"
 ```
 
-You'll also need Microsoft Edge installed for the Selenium webdriver.
+You'll also need Microsoft Edge installed for Selenium-based premium scraping.
+
+For OpenAI translation, set an API key in your shell or enter it in the GUI:
+
+```bash
+export OPENAI_API_KEY="your_api_key"
+```
 
 ## Usage
 
-Specify the Substack URL and the directory to save the posts to:
+### Desktop GUI
 
-You can hardcode your desired Substack URL and the number of posts you'd like to save into the top of the file and run:
+Launch the desktop app:
+
 ```bash
-python substack_scraper.py
+python3 substack_gui.py
 ```
 
-For free Substack sites:
+The GUI supports:
+
+- Free and premium scraping
+- Full-site or single-article export
+- Markdown, HTML, and PDF generation
+- Translation of downloaded Markdown files into new translated Markdown/HTML/PDF files
+- Output directory selection and run logs
+
+### SwiftUI macOS Client
+
+The native macOS client lives under:
 
 ```bash
-python substack_scraper.py --url https://example.substack.com --directory /path/to/save/posts
+Package.swift
+Sources/SubstackStudioApp/
 ```
 
-For premium Substack sites:
+Its UI is fully in Chinese and it delegates work to the existing Python backend:
 
 ```bash
-python substack_scraper.py --url https://example.substack.com --directory /path/to/save/posts --premium
+.venv/bin/python3 substack_scraper.py
 ```
 
-To scrape a specific number of posts:
+Recommended local workflow:
+
+1. Install or keep a working Python virtual environment in this repo.
+2. Open the folder in Xcode.
+3. Let Xcode resolve the Swift Package.
+4. Run the `SubstackStudio` app target.
+
+### CLI
+
+Free Substack site or direct article URL:
 
 ```bash
-python substack_scraper.py --url https://example.substack.com --directory /path/to/save/posts --number 5
+python3 substack_scraper.py --url https://example.substack.com --directory /path/to/save/posts
+```
+
+Single article with PDF export:
+
+```bash
+python3 substack_scraper.py \
+  --url https://example.substack.com/p/some-post \
+  --directory ./substack_md_files \
+  --html-directory ./substack_html_pages \
+  --pdf
+```
+
+Premium Substack site:
+
+```bash
+python3 substack_scraper.py \
+  --url https://example.substack.com \
+  --directory ./substack_md_files \
+  --html-directory ./substack_html_pages \
+  --premium \
+  --email your-email@domain.com \
+  --password 'your-password'
+```
+
+Translate an already-downloaded Markdown article to Chinese and generate a new PDF:
+
+```bash
+python3 substack_scraper.py \
+  --translate-file ./downloads_md/citriniresearch/2028gic.md \
+  --target-language Chinese \
+  --html-directory ./translated_output \
+  --openai-api-key "$OPENAI_API_KEY"
+```
+
+Translate every downloaded Markdown file in a folder:
+
+```bash
+python3 substack_scraper.py \
+  --translate-directory ./downloads_md/citriniresearch \
+  --target-language Chinese \
+  --html-directory ./translated_output \
+  --openai-api-key "$OPENAI_API_KEY"
+```
+
+Scrape a specific number of posts:
+
+```bash
+python3 substack_scraper.py --url https://example.substack.com --number 5
 ```
 
 ### Online Version
@@ -87,10 +161,41 @@ For a hassle-free experience without any local setup:
 
 This online version provides a user-friendly web interface for reading and exporting free Substack articles, with no installation required. However, please note that the online version currently does not support exporting premium content. For full functionality, including premium content export, please use the local script as described above. Built by @Firevvork. 
 
-## Viewing Markdown Files in Browser
+## Notes
 
-To read the Markdown files in your browser, install the [Markdown Viewer](https://chromewebstore.google.com/detail/markdown-viewer/ckkdlimhmcjmikdlpkmbgfkaikojcbjk)
-browser extension. But note, we also save the files as HTML for easy viewing, 
-just set the toggle to HTML on the author homepage. 
+- `substack_scraper.py` remains the main CLI entry point.
+- `substack_gui.py` launches the desktop interface.
+- The SwiftUI app stores output directories, API key, base URL, model, API mode, and target language in local user defaults.
+- Translation runs against existing `.md` article files and requires a valid OpenAI-compatible API key.
+- Translation supports custom OpenAI-compatible base URLs and can switch between `Responses` and `Chat Completions`.
+- Premium scraping still depends on a valid Substack subscription and successful browser login.
 
-Or you can use our [Substack Reader](https://www.substacktools.com/reader) online tool, which allows you to read and export free Substack articles directly in your browser. (Note: Premium content export is currently only available in the local script version)
+## Build macOS Apps
+
+### Python/Tkinter app
+
+Install PyInstaller into the virtual environment, then run:
+
+```bash
+./build_macos_app.sh
+```
+
+The generated app bundle will be written to:
+
+```bash
+dist/Substack Studio.app
+```
+
+### SwiftUI app
+
+Use the packaging script below. It builds the SwiftUI app, generates the app icon, bundles the Python backend, and signs the final `.app`:
+
+```bash
+./package_swiftui_app.sh
+```
+
+The generated app bundle will be written to:
+
+```bash
+dist/Substack Studio SwiftUI.app
+```

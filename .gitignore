@@ -2,13 +2,18 @@
 config.py
 setup.py
 **/__pycache__/
+.DS_Store
 
 # Ignore virtual environment directories
 venv/
+.venv/
 
 # Ignore editor/IDE configuration files
 .idea/
 .vscode/
+.build/
+.icon_build/
+dist/
 
 # Ignore all files in data/ except README.md
 data/
@@ -20,3 +25,8 @@ substack_html_pages/*
 
 # Ignore substack_md_files directory
 /substack_md_files/
+
+# Ignore local output folders
+/downloads_md/
+/downloads_html/
+/translated_output/
